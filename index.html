@@ -30,7 +30,7 @@
             width: 90%;
             max-width: 400px;
             z-index: 10;
-            transition: all 0.5s ease;
+            transition: all 0.3s ease;
         }
 
         .step {
@@ -39,7 +39,7 @@
 
         .step.active {
             display: block;
-            animation: fadeIn 0.5s ease forwards;
+            animation: fadeIn 0.4s ease forwards;
         }
 
         @keyframes fadeIn {
@@ -65,7 +65,7 @@
             padding: 12px;
             border: 2px solid #ffccd5;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             outline: none;
             font-size: 16px;
             text-align: center;
@@ -73,6 +73,15 @@
 
         input[type="text"]:focus {
             border-color: #ff4d6d;
+        }
+
+        /* رسالة الخطأ البديلة للـ alert */
+        .error-message {
+            color: #ff4d6d;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: none;
+            font-weight: 600;
         }
 
         button {
@@ -178,7 +187,7 @@
 
         /* Hearts Animation */
         .heart {
-            position: fixed; /* تم التعديل لـ fixed عشان يطير فوق الشاشة كلها بشكل صحيح */
+            position: fixed;
             bottom: -20px;
             color: #ff4d6d;
             font-size: 20px;
@@ -201,6 +210,7 @@
             <h2>Level 1: The Password</h2>
             <p>Enter your name to unlock this secret journey ❤️</p>
             <input type="text" id="nameInput" placeholder="Type your name here...">
+            <div class="error-message" id="errorMsg"></div>
             <button onclick="checkLevel1()">Unlock</button>
         </div>
 
@@ -242,15 +252,20 @@
     </div>
 
     <script>
-        // Level 1: Name verification for 'pan'
+        // Level 1: Name verification
         function checkLevel1() {
             const nameInput = document.getElementById('nameInput').value.trim().toLowerCase();
+            const errorMsg = document.getElementById('errorMsg');
+            
             if(nameInput === "pan") {
+                errorMsg.style.display = "none";
                 nextLevel(2);
             } else if (nameInput === "") {
-                alert("Please enter your name to proceed! ✨");
+                errorMsg.innerText = "Please enter your name to proceed! ✨";
+                errorMsg.style.display = "block";
             } else {
-                alert("Oops! That's not the name of my favorite person. Try again! 👀");
+                errorMsg.innerText = "Oops! That's not the name of my favorite person. Try again! 👀";
+                errorMsg.style.display = "block";
             }
         }
 
@@ -259,13 +274,15 @@
             document.querySelectorAll('.step').forEach(step => {
                 step.classList.remove('active');
             });
-            document.getElementById('step' + stepNumber).classList.add('active');
+            const targetStep = document.getElementById('step' + stepNumber) || document.getElementById(stepNumber);
+            if(targetStep) {
+                targetStep.classList.add('active');
+            }
         }
 
-        // Level 3: Moving the 'No' Button away from cursor safely
+        // Level 3: Moving the 'No' Button
         function moveNoButton() {
             const noBtn = document.getElementById('noBtn');
-            // حركة عشوائية مضبوطة عشان الزرار ما يخرجش بره حدود الكارد في الموبايل
             const randomX = Math.floor(Math.random() * 50) + 10; 
             const randomY = Math.floor(Math.random() * 60) - 30; 
             
@@ -273,17 +290,18 @@
             noBtn.style.top = randomY + 'px';
         }
 
-        // Final Trigger: Show Reward Page and start heart rain
+        // Final Trigger: Show Reward Page
         function showReward() {
             const card = document.getElementById('mainCard');
             card.classList.add('reward-card');
             
-            nextLevel('rewardStep'); // تم تعديلها هنا لـ r سمول لتطابق الـ HTML تماماً
+            nextLevel('rewardStep');
             startHeartRain();
         }
 
-        // Heart generation animation
+        // Heart generation animation (خفيفة وآمنة للموبايل)
         function startHeartRain() {
+            // عملت تايمر أبطأ شوية (كل 400ms) عشان المتصفحات الضعيفة متقفلش الكود
             setInterval(() => {
                 const heart = document.createElement('div');
                 heart.classList.add('heart');
@@ -296,7 +314,7 @@
                 setTimeout(() => {
                     heart.remove();
                 }, 3000);
-            }, 300);
+            }, 400);
         }
     </script>
 </body>
