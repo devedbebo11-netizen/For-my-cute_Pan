@@ -18,7 +18,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         .card {
@@ -122,17 +122,20 @@
             gap: 20px;
             margin-top: 20px;
             position: relative;
-            height: 50px;
+            height: 60px;
+            width: 100%;
         }
 
         #noBtn {
             background: #a3a3a3;
             position: absolute;
             transition: all 0.2s ease;
+            left: 60%;
         }
 
         #yesBtn {
             position: absolute;
+            left: 20%;
         }
 
         /* Reward Page Layout */
@@ -175,25 +178,25 @@
 
         /* Hearts Animation */
         .heart {
-            position: absolute;
+            position: fixed; /* تم التعديل لـ fixed عشان يطير فوق الشاشة كلها بشكل صحيح */
+            bottom: -20px;
             color: #ff4d6d;
             font-size: 20px;
             animation: fly 3s linear infinite;
             pointer-events: none;
-            z-index: 1;
+            z-index: 100;
             opacity: 0;
         }
 
         @keyframes fly {
-            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
     <div class="card" id="mainCard">
-        <!-- LEVEL 1: NAME CHECK -->
         <div class="step active" id="step1">
             <h2>Level 1: The Password</h2>
             <p>Enter your name to unlock this secret journey ❤️</p>
@@ -201,7 +204,6 @@
             <button onclick="checkLevel1()">Unlock</button>
         </div>
 
-        <!-- LEVEL 2: MULTIPLE CHOICE -->
         <div class="step" id="step2">
             <h2>Level 2: Quick Question</h2>
             <p>When do you look the most beautiful? 🤔</p>
@@ -212,7 +214,6 @@
             </div>
         </div>
 
-        <!-- LEVEL 3: ESCAPING BUTTON -->
         <div class="step" id="step3">
             <h2>Level 3: The Final Choice</h2>
             <p>Do you promise to stay by my side forever, Pan? 🥺</p>
@@ -222,12 +223,10 @@
             </div>
         </div>
 
-        <!-- REWARD PAGE -->
         <div class="step" id="rewardStep">
             <h2>Congratulations Pan! 🎉</h2>
             <p>You've successfully completed all levels. Here is your reward:</p>
             
-            <!-- Two Photos Container with your direct links -->
             <div class="photo-gallery">
                 <div class="photo-box">
                     <img src="https://i.ibb.co/nsMd3PJw/IMG-2441.png" alt="Pan Memory 1">
@@ -237,22 +236,13 @@
                 </div>
             </div>
 
-            <!-- Sweet Words -->
             <p class="sweet-text">"Every moment spent with you is like a beautiful dream come true. You are my favorite person, my happiest thought, and my whole world."</p>
             <p style="font-size: 24px;">❤️❤️❤️</p>
         </div>
     </div>
 
     <script>
-        // Adjust side-by-side button initial positions for Level 3
-        document.addEventListener("DOMContentLoaded", () => {
-            const yesBtn = document.getElementById('yesBtn');
-            const noBtn = document.getElementById('noBtn');
-            yesBtn.style.left = '25%';
-            noBtn.style.left = '60%';
-        });
-
-        // Level 1: Strict name verification for 'pan'
+        // Level 1: Name verification for 'pan'
         function checkLevel1() {
             const nameInput = document.getElementById('nameInput').value.trim().toLowerCase();
             if(nameInput === "pan") {
@@ -272,12 +262,12 @@
             document.getElementById('step' + stepNumber).classList.add('active');
         }
 
-        // Level 3: Moving the 'No' Button away from cursor
+        // Level 3: Moving the 'No' Button away from cursor safely
         function moveNoButton() {
             const noBtn = document.getElementById('noBtn');
-            // Restrict movement within the button group container limits
-            const randomX = Math.floor(Math.random() * 70) + 10; // Percentage based positioning
-            const randomY = Math.floor(Math.random() * 100) - 50; // Pixels offset
+            // حركة عشوائية مضبوطة عشان الزرار ما يخرجش بره حدود الكارد في الموبايل
+            const randomX = Math.floor(Math.random() * 50) + 10; 
+            const randomY = Math.floor(Math.random() * 60) - 30; 
             
             noBtn.style.left = randomX + '%';
             noBtn.style.top = randomY + 'px';
@@ -288,7 +278,7 @@
             const card = document.getElementById('mainCard');
             card.classList.add('reward-card');
             
-            nextLevel('RewardStep');
+            nextLevel('rewardStep'); // تم تعديلها هنا لـ r سمول لتطابق الـ HTML تماماً
             startHeartRain();
         }
 
