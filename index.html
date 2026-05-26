@@ -18,7 +18,6 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
         .card {
@@ -29,8 +28,7 @@
             text-align: center;
             width: 90%;
             max-width: 400px;
-            z-index: 10;
-            transition: all 0.3s ease;
+            transition: max-width 0.3s ease;
         }
 
         .step {
@@ -39,12 +37,6 @@
 
         .step.active {
             display: block;
-            animation: fadeIn 0.4s ease forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         h2 {
@@ -75,7 +67,6 @@
             border-color: #ff4d6d;
         }
 
-        /* رسالة الخطأ البديلة للـ alert */
         .error-message {
             color: #ff4d6d;
             font-size: 14px;
@@ -93,12 +84,6 @@
             font-size: 16px;
             cursor: pointer;
             font-weight: bold;
-            transition: transform 0.2s, background 0.2s;
-        }
-
-        button:hover {
-            background: #ff758f;
-            transform: scale(1.05);
         }
 
         /* Level 2 Options */
@@ -117,14 +102,9 @@
             border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.2s;
         }
 
-        .option-btn:hover {
-            background: #ffccd5;
-        }
-
-        /* Level 3 Side by Side Buttons */
+        /* Level 3 Layout */
         .btn-group {
             display: flex;
             justify-content: center;
@@ -132,13 +112,11 @@
             margin-top: 20px;
             position: relative;
             height: 60px;
-            width: 100%;
         }
 
         #noBtn {
             background: #a3a3a3;
             position: absolute;
-            transition: all 0.2s ease;
             left: 60%;
         }
 
@@ -148,10 +126,6 @@
         }
 
         /* Reward Page Layout */
-        .reward-card {
-            max-width: 450px;
-        }
-
         .photo-gallery {
             display: flex;
             gap: 15px;
@@ -167,9 +141,6 @@
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         .photo-box img {
@@ -183,23 +154,6 @@
             color: #ff4d6d;
             font-style: italic;
             font-weight: 600;
-        }
-
-        /* Hearts Animation */
-        .heart {
-            position: fixed;
-            bottom: -20px;
-            color: #ff4d6d;
-            font-size: 20px;
-            animation: fly 3s linear infinite;
-            pointer-events: none;
-            z-index: 100;
-            opacity: 0;
-        }
-
-        @keyframes fly {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
         }
     </style>
 </head>
@@ -252,7 +206,6 @@
     </div>
 
     <script>
-        // Level 1: Name verification
         function checkLevel1() {
             const nameInput = document.getElementById('nameInput').value.trim().toLowerCase();
             const errorMsg = document.getElementById('errorMsg');
@@ -260,61 +213,38 @@
             if(nameInput === "pan") {
                 errorMsg.style.display = "none";
                 nextLevel(2);
-            } else if (nameInput === "") {
-                errorMsg.innerText = "Please enter your name to proceed! ✨";
-                errorMsg.style.display = "block";
             } else {
-                errorMsg.innerText = "Oops! That's not the name of my favorite person. Try again! 👀";
+                errorMsg.innerText = nameInput === "" ? "Please enter your name to proceed! ✨" : "Oops! Try again! 👀";
                 errorMsg.style.display = "block";
             }
         }
 
-        // Switch between steps
         function nextLevel(stepNumber) {
-            document.querySelectorAll('.step').forEach(step => {
-                step.classList.remove('active');
-            });
-            const targetStep = document.getElementById('step' + stepNumber) || document.getElementById(stepNumber);
-            if(targetStep) {
-                targetStep.classList.add('active');
-            }
+            // إخفاء كل الصفحات
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step3').style.display = 'none';
+            document.getElementById('rewardStep').style.display = 'none';
+            
+            // إظهار الصفحة المطلوبة مباشرة
+            document.getElementById('step' + stepNumber).style.display = 'block';
         }
 
-        // Level 3: Moving the 'No' Button
         function moveNoButton() {
             const noBtn = document.getElementById('noBtn');
             const randomX = Math.floor(Math.random() * 50) + 10; 
-            const randomY = Math.floor(Math.random() * 60) - 30; 
-            
+            const randomY = Math.floor(Math.random() * 40) - 20; 
             noBtn.style.left = randomX + '%';
             noBtn.style.top = randomY + 'px';
         }
 
-        // Final Trigger: Show Reward Page
         function showReward() {
-            const card = document.getElementById('mainCard');
-            card.classList.add('reward-card');
-            
-            nextLevel('rewardStep');
-            startHeartRain();
-        }
-
-        // Heart generation animation (خفيفة وآمنة للموبايل)
-        function startHeartRain() {
-            // عملت تايمر أبطأ شوية (كل 400ms) عشان المتصفحات الضعيفة متقفلش الكود
-            setInterval(() => {
-                const heart = document.createElement('div');
-                heart.classList.add('heart');
-                heart.innerHTML = '❤️';
-                heart.style.left = Math.random() * 100 + 'vw';
-                heart.style.animationDuration = (Math.random() * 2 + 2) + 's';
-                heart.style.fontSize = (Math.random() * 15 + 15) + 'px';
-                document.body.appendChild(heart);
-
-                setTimeout(() => {
-                    heart.remove();
-                }, 3000);
-            }, 400);
+            // توسيع الكارد وإظهار صفحة المكافأة فوراً بأبسط طريقة ممکنة
+            document.getElementById('mainCard').style.maxWidth = '450px';
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('step3').style.display = 'none';
+            document.getElementById('rewardStep').style.display = 'block';
         }
     </script>
 </body>
