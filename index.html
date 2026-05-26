@@ -10,6 +10,8 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         body {
@@ -81,52 +83,90 @@
             font-size: 16px;
             cursor: pointer;
             font-weight: bold;
-            transition: background 0.2s;
         }
 
-        button:hover {
-            background: #ff758f;
-        }
-
-        /* 💡 ستايل لعبة توصيل النور 💡 */
+        /* 💡 تصميم بوردة توصيل السلك الحقيقي 💡 */
         .circuit-board {
             width: 100%;
-            height: 180px;
+            height: 200px;
             background: #fff0f3;
             border: 2px dashed #ffccd5;
             border-radius: 15px;
             margin-bottom: 20px;
             position: relative;
+            overflow: hidden;
+            touch-action: none; /* تمنع سحب الصفحة بالخطأ على الموبايل */
         }
 
-        .battery-node, .bulb-node {
+        .battery-node {
             position: absolute;
             top: 50%;
+            left: 20px;
             transform: translateY(-50%);
             font-size: 40px;
+            z-index: 2;
         }
 
-        .battery-node { left: 20px; }
-        .bulb-node { right: 20px; }
+        .bulb-node {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            font-size: 40px;
+            z-index: 2;
+        }
 
-        /* منطقة السلك المقطوع القابل للتوصيل */
-        .wire-connector {
+        /* النقطة الوردية المستهدفة عند اللمبة للتوصيل */
+        .target-terminal {
+            position: absolute;
+            top: 50%;
+            right: 70px;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: #ff758f;
+            border-radius: 50%;
+            border: 2px solid white;
+            z-index: 2;
+        }
+
+        /* السلك المقطوع والـ Knob اللي هيتسحب باليد */
+        .draggable-wire-head {
             position: absolute;
             top: 50%;
             left: 100px;
-            width: 120px;
-            height: 40px;
             transform: translateY(-50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: #ff4d6d;
+            border: 3px solid white;
+            border-radius: 50%;
+            cursor: grab;
+            z-index: 5;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        /* السلك المتصل والمنزلق */
-        .wire-slider {
+        .draggable-wire-head:active {
+            cursor: grabbing;
+        }
+
+        /* خط السلك النامي والمتحرك */
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            cursor: pointer;
-            accent-color: #ff4d6d;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        #wirePath {
+            stroke: #a3a3a3;
+            stroke-width: 6;
+            stroke-linecap: round;
+            fill: none;
+            transition: stroke 0.2s;
         }
 
         .status-text {
@@ -136,7 +176,7 @@
             font-weight: bold;
         }
 
-        /* Level 3 Side by Side Buttons */
+        /* أزرار الـ Yes والـ No */
         .btn-group {
             display: flex;
             justify-content: center;
@@ -159,7 +199,7 @@
             left: 20%;
         }
 
-        /* Reward Page Layout */
+        /* صفحة الصور والمكافأة */
         .photo-gallery {
             display: flex;
             gap: 15px;
@@ -203,20 +243,23 @@
         </div>
 
         <div class="step" id="step2">
-            <h2>Level 2: Fix the Circuit ⚡</h2>
-            <p>Connect the wire to light up the bulb and unlock the next stage!</p>
+            <h2>Level 2: Connect the Wire! 🔌</h2>
+            <p>Drag the pink wire head and plug it into the terminal near the bulb!</p>
             
-            <div class="circuit-board">
+            <div class="circuit-board" id="board">
                 <div class="battery-node">🔋</div>
                 
-                <div class="wire-connector">
-                    <input type="range" min="0" max="100" value="0" class="wire-slider" id="wireRange" oninput="checkWire(this.value)">
-                </div>
+                <svg>
+                    <path id="wirePath" d="M 60 100 L 112 100" />
+                </svg>
 
+                <div class="draggable-wire-head" id="wireHead"></div>
+                
+                <div class="target-terminal" id="targetNode"></div>
                 <div class="bulb-node" id="bulb">⚫</div>
             </div>
 
-            <div class="status-text" id="wireStatus" style="color: #666;">Status: Disconnected ❌</div>
+            <div class="status-text" id="wireStatus">Status: Wire Disconnected ❌</div>
             <br>
             <button id="nextLevel2Btn" style="display: none; margin: 0 auto;" onclick="nextLevel(3)">Next Level ✨</button>
         </div>
@@ -256,6 +299,7 @@
             if(nameInput === "pan") {
                 errorMsg.style.display = "none";
                 nextLevel(2);
+                initWireGame(); // تشغيل اللعبة فوراً عند الدخول للمستوى 2
             } else {
                 errorMsg.innerText = nameInput === "" ? "Please enter your name to proceed! ✨" : "Oops! Try again! 👀";
                 errorMsg.style.display = "block";
@@ -271,24 +315,88 @@
             document.getElementById('step' + stepNumber).style.display = 'block';
         }
 
-        // تفاعل لغز توصيل النور
-        function checkWire(value) {
+        // 🔧 نظام سحب وتوصيل السلك الجديد كلياً 🔧
+        function initWireGame() {
+            const head = document.getElementById('wireHead');
+            const path = document.getElementById('wirePath');
+            const board = document.getElementById('board');
+            const target = document.getElementById('targetNode');
             const bulb = document.getElementById('bulb');
             const statusText = document.getElementById('wireStatus');
             const nextBtn = document.getElementById('nextLevel2Btn');
 
-            // لو سحبت السلك للآخر (قيمة 100) الدائرة تكتمل واللمبة تنور
-            if(parseInt(value) >= 95) {
-                bulb.innerHTML = "💡";
-                statusText.innerHTML = "Status: Connected! ⚡";
-                statusText.style.color = "#4caf50";
-                nextBtn.style.display = "block"; // يظهر زرار الانتقال
-            } else {
-                bulb.innerHTML = "⚫";
-                statusText.innerHTML = "Status: Disconnected ❌";
-                statusText.style.color = "#666";
-                nextBtn.style.display = "none";
+            let isDragging = false;
+            let isConnected = false;
+
+            // بدء السحب (ماوس أو لمس مبايل)
+            function startDrag(e) {
+                if(isConnected) return;
+                isDragging = true;
             }
+
+            function doDrag(e) {
+                if (!isDragging || isConnected) return;
+
+                // حساب الإحداثيات بالنسبة للبوردة الوردية
+                const rect = board.getBoundingClientRect();
+                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                let x = clientX - rect.left - 12; // 12 هي نصف قطر رأس السلك لضبط المركز
+                let y = clientY - rect.top - 12;
+
+                // منع السلك من الخروج خارج البوردة
+                x = Math.max(60, Math.min(x, rect.width - 35));
+                y = Math.max(10, Math.min(y, rect.height - 35));
+
+                // تحديث مكان رأس السلك
+                head.style.left = x + 'px';
+                head.style.top = y + 'px';
+
+                // رسم السلك الواصل من البطارية (نقطة 60, 100) إلى رأس السلك الجديد
+                path.setAttribute('d', `M 60 100 Q ${(60+x)/2} ${y+30} ${x+12} ${y+12}`);
+
+                // التحقق من القرب من نقطة الهدف (اللمبة)
+                const targetRect = target.getBoundingClientRect();
+                const headRect = head.getBoundingClientRect();
+
+                const distance = Math.hypot(
+                    (headRect.left + 12) - (targetRect.left + 10),
+                    (headRect.top + 12) - (targetRect.top + 10)
+                );
+
+                // لو قرب جداً (أقل من 25 بكسل) يتم التوصيل التلقائي المضمون
+                if (distance < 25) {
+                    isDragging = false;
+                    isConnected = true;
+                    
+                    // قفل السلك في مكان التوصيل بالظبط
+                    head.style.left = (rect.width - 82) + 'px';
+                    head.style.top = (rect.height / 2 - 12) + 'px';
+                    path.setAttribute('d', `M 60 100 Q ${(60 + (rect.width - 82))/2} ${rect.height/2 + 20} ${rect.width - 70} ${rect.height / 2}`);
+                    path.style.stroke = "#4caf50"; // تحويل السلك للون الأخضر دليل الكهرباء
+
+                    // إنارة اللمبة وإظهار زرار التالي
+                    bulb.innerHTML = "💡";
+                    statusText.innerHTML = "Status: Connected Successfully! ⚡❤️";
+                    statusText.style.color = "#4caf50";
+                    nextBtn.style.display = "block";
+                }
+            }
+
+            function stopDrag() {
+                isDragging = false;
+            }
+
+            // ربط الأحداث للماوس وللموبايل
+            head.addEventListener('mousedown', startDrag);
+            head.addEventListener('touchstart', startDrag);
+
+            window.addEventListener('mousemove', doDrag);
+            window.addEventListener('touchmove', doDrag);
+
+            window.addEventListener('mouseup', stopDrag);
+            window.addEventListener('touchend', stopDrag);
         }
 
         function moveNoButton() {
